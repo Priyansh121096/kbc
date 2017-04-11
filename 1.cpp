@@ -19,6 +19,26 @@ GLuint tex[5];
 char name[32];
 double px[]={-480,-480,-480,-480,-480}, py[]={200,100,0,-100,-200},transp[]={1,0.2,0.2,0.2,0.2};
 
+struct corrAns
+{
+    string ans;
+    int prob;
+};
+
+struct wrongAns
+{
+    string ans;
+    int prob;
+    bool flag;
+};
+
+struct Question
+{
+	string ques;
+	corrAns cAns;
+	wrongAns wAns[3];
+};
+
 class user
 {
 	public:           
@@ -172,6 +192,9 @@ void display(void);
 void idle(void);
 //void Idle(void);
 void idle2(void);
+void idle3(void);
+void audiencePoll(Question *q);
+void fiftyFifty(Question *q);
 void already(int x);
 void does(int x);
 
@@ -446,6 +469,7 @@ void display(void)
 		idle();
 		if(already_exists)
 			already(0);
+		return_from_nglg = 1;
 	}
 
 	else if(load_game)
@@ -455,6 +479,7 @@ void display(void)
 		idle();
 		if(does_not_exist)
 			does(0);
+		return_from_nglg = 1;
 	}
 	
 	else if(high_score)
@@ -471,6 +496,12 @@ void display(void)
 		show_background(1);
 		idle2();
 		return_from_hs=0;
+	}
+
+	else if(return_from_nglg)
+	{
+		show_background(1);
+		idle3();
 	}
 
 	GLuint tx1,tx2;
@@ -604,6 +635,109 @@ void idle2(void)
 		glutBitmapCharacter(font_style, h[i]);
 
 	glFlush();
+}
+
+void idle3(void)
+{
+	cout<<"here"<<endl;
+	ifstream fp;
+	fp.open("ques1.txt");
+	int nq;
+	fp >> nq;
+	cout<<nq<<endl;
+	int i = rand()%nq;
+	cout<<i<<endl;
+	Question q;
+	string buf;
+	for(int j=0;j<i;j++)
+	{
+		getline(fp,buf);
+		getline(fp,buf);
+		getline(fp,buf);
+		getline(fp,buf);
+		getline(fp,buf);
+	}
+	getline(fp,q.ques);
+	getline(fp,q.cAns.ans);
+	getline(fp,q.wAns[0].ans);
+	getline(fp,q.wAns[1].ans);
+	getline(fp,q.wAns[2].ans);
+	audiencePoll(&q);
+	fiftyFifty(&q);
+	cout<<q.ques<<endl;
+
+	glBegin(GL_LINE_STRIP);
+		glColor4f(1.0, 1.0, 1.0,1);
+		glVertex2f(-360,0);
+		glVertex2f(360,0);
+		glVertex2f(360,-150);
+		glVertex2f(-360,-150);
+		glVertex2f(-360,0);
+	glEnd();
+
+	glBegin(GL_LINE_STRIP);
+		glColor4f(1.0, 1.0, 1.0,1);
+		glVertex2f(-480,-200);
+		glVertex2f(-200,-200);
+		glVertex2f(-200,-300);
+		glVertex2f(-480,-300);
+		glVertex2f(-480,-200);
+	glEnd();
+	
+	glBegin(GL_LINE_STRIP);
+		glColor4f(1.0, 1.0, 1.0,1);
+		glVertex2f(200,-200);
+		glVertex2f(480,-200);
+		glVertex2f(480,-300);
+		glVertex2f(200,-300);
+		glVertex2f(200,-200);
+	glEnd();
+
+	glBegin(GL_LINE_STRIP);
+		glColor4f(1.0, 1.0, 1.0,1);
+		glVertex2f(-480,-400);
+		glVertex2f(-200,-400);
+		glVertex2f(-200,-500);
+		glVertex2f(-480,-500);
+		glVertex2f(-480,-400);
+	glEnd();
+	
+	glBegin(GL_LINE_STRIP);
+		glColor4f(1.0, 1.0, 1.0,1);
+		glVertex2f(200,-400);
+		glVertex2f(480,-400);
+		glVertex2f(480,-500);
+		glVertex2f(200,-500);
+		glVertex2f(200,-400);
+	glEnd();
+
+	/*GLvoid *font_style = GLUT_BITMAP_TIMES_ROMAN_24;
+	glColor4f(1.0, 1.0, 1.0,1);
+	glRasterPos2f (-350, -10);
+	for (int i = 0; q.ques[i] != '\0'; i++)
+		glutBitmapCharacter(font_style, q.ques[i]);*/
+
+}
+
+void audiencePoll(Question *q)
+{
+	int sum = 0;
+	q->cAns.prob = rand()%100 + 50;
+	sum += q->cAns.prob;
+	q->wAns[0].prob = rand()%(100 - sum);
+	sum += q->wAns[0].prob;
+	q->wAns[1].prob = rand()%(100 - sum);
+	sum += q->wAns[1].prob;
+	q->wAns[2].prob = rand()%(100 - sum);
+}
+    
+void fiftyFifty(Question *q)
+{
+	int rand1 = rand()%3;
+	int rand2 = rand()%3;
+	while(rand2==rand1)
+		rand2 = rand()%3;
+	q->wAns[rand1].flag = q->wAns[rand2].flag = false;
 }
 
 
