@@ -7,6 +7,7 @@
 #include<iostream>
 #include<string>
 #include<string.h>
+#include<stdlib.h>
 using namespace std;
 
 volatile int stopsound = 0;
@@ -275,6 +276,12 @@ void key_func(unsigned char key,int x,int y)
 			high_score=1;
 		}
 
+		else if(active_option==3 && game_menu)
+		{
+			std::cout<<"Bye Bye. Visit Again"<<endl;
+			exit(1);
+		}
+
 		else if(game_menu==0 && new_game==1)
 		{
 			if(strlen(name)==0)
@@ -325,11 +332,6 @@ void key_func(unsigned char key,int x,int y)
 				does_not_exist=1;
 				return;
 			}
-		}
-		
-		else if(game_menu==0 && return_from_hs==1)
-		{
-			
 		}
 		
         glutPostRedisplay();
