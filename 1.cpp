@@ -18,7 +18,7 @@ int menuw;
 GLuint tex[5];
 char name[32];
 double px[]={-480,-480,-480,-480,-480}, py[]={200,100,0,-100,-200},transp[]={1,0.2,0.2,0.2,0.2};
-double minx[4],maxx[4],miny[4],maxy[4];
+int minx[4]={0},maxx[4]={0},miny[4]={0},maxy[4]={0};
 
 struct corrAns
 {
@@ -56,13 +56,16 @@ class user
 
 		bool newuser(string nme)
 		{
+			
 			name = nme;
-			ifstream infile1("Entry.txt");
+			ifstream infile1;
+			infile1.open("Entry.txt");
 			int a,b;
 			string n;
 			while(!infile1.eof())
 			{
-				infile1>>n;
+				cout<<"here"<<endl;
+				getline(infile1,n);
 				if(infile1.eof()){  break; }
 				infile1>>a;
 				infile1>>b;
@@ -73,19 +76,23 @@ class user
 			ofstream infile("Entry.txt",ios::app);  
 			infile<<name<<endl;
 			infile<<level<<endl;
-			infile<<high_score<<endl;  
+			infile<<high_score<<endl;
 			infile.close();
 			return true;   
 		} 
 
 		bool loaduser(string nme)
-		{
+		{	
+			cout<<"here2"<<endl;
+			cout<<nme;
 			ifstream infile("Entry.txt");
 			int a,b;
 			string n;
 			while(!infile.eof())
 			{
+				cout<<"here3"<<endl;
 				infile>>n;
+				cout<<n<<endl;
 				if(infile.eof()){  break; }
 				infile>>a;
 				infile>>b;
@@ -207,7 +214,6 @@ int main(int argc, char *argv[])
     srand(time(NULL));
     glutInit(&argc, argv);
     glutInitDisplayMode (GLUT_DOUBLE| GLUT_RGB);
-
     glutInitWindowSize (1362, 750);
     glutInitWindowPosition (0, 0);
     menuw = glutCreateWindow ("User Details");
@@ -316,7 +322,6 @@ void key_func(unsigned char key,int x,int y)
 
 			if(obj.newuser(name))
 			{
-				//cout<<"here"<<endl;
 				new_game=0;
 				return_from_nglg = 1;
 			}
@@ -331,10 +336,14 @@ void key_func(unsigned char key,int x,int y)
 		else if(game_menu==0 && load_game==1)
 		{
 			if(strlen(name)==0)
+			{
+				cout<<"here"<<endl;
 				return;
+			}
 
 			if(obj.loaduser(name))
 			{
+				cout<<"here"<<endl;
 				load_game=0;
 				return_from_nglg = 1;
 			}
@@ -361,7 +370,7 @@ void key_func(unsigned char key,int x,int y)
 				return;
 			}
 		}
-        glutPostRedisplay();
+        	glutPostRedisplay();
 	}
 
 	else if(((key>=65 && key<=90) || (key>=65 && key<=122) || key==32 ) && (new_game || load_game || high_score))
@@ -481,7 +490,7 @@ void draw_font(string s,double x,double y)
 
 void display(void)
 {
-	int i,width=-1000,height=1000;
+	int i;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glColor3f(0.4,0.5,0.1);
 	if (game_menu)
@@ -524,7 +533,7 @@ void display(void)
 		return_from_hs=0;
 	}
 
-	else
+	else //if(return_from_nglg)
 	{
 		show_background(1);
 		idle3();
@@ -718,18 +727,18 @@ void idle3(void)
 
 	glBegin(GL_POLYGON);
 		glColor4f(0.282, 0.239, 0.545,1);
-		glVertex2f(-480,-400);
-		glVertex2f(-200,-400);
-		glVertex2f(-200,-500);
-		glVertex2f(-480,-500);
+		glVertex2f(-480,-350);
+		glVertex2f(-200,-350);
+		glVertex2f(-200,-450);
+		glVertex2f(-480,-450);
 	glEnd();
 	
 	glBegin(GL_POLYGON);
 		glColor4f(0.282, 0.239, 0.545,1);
-		glVertex2f(200,-400);
-		glVertex2f(480,-400);
-		glVertex2f(480,-500);
-		glVertex2f(200,-500);
+		glVertex2f(200,-350);
+		glVertex2f(480,-350);
+		glVertex2f(480,-450);
+		glVertex2f(200,-450);
 	glEnd();
 
 	char ques[140];
@@ -742,11 +751,11 @@ void idle3(void)
 
 	char ans[40];	
 	double c2x[] = {-400,250,-400,250};
-	double c2y[] = {-230,-230,-440,-440};
-	double minx2[] = {-480,200,-480,200};
-	double miny2[] = {-300,-300,-500,-500};
-	double maxx2[] = {-200,480,-200,480};
-	double maxy2[] = {-200,-200,-400,-400};
+	double c2y[] = {-230,-230,-380,-380};
+	int minx2[] = {-480,200,-480,200};
+	int miny2[] = {-300,-300,-450,-450};
+	int maxx2[] = {-200,480,-200,480};
+	int maxy2[] = {-200,-200,-350,-350};
 	int k[4];
 	generateSetOfNumbers(k,4);	
 	for(i=0;i<4;i++)
@@ -758,6 +767,9 @@ void idle3(void)
 			miny[3] = miny2[i];
 			maxx[3] = maxx2[i];
 			maxy[3] = maxy2[i];
+			cout<<"Correct coordinates"<<endl;
+			cout<<minx[3]<<" "<<miny[3]<<endl;
+			cout<<maxx[3]<<" "<<maxy[3]<<endl;
 		}
 		else
 		{
@@ -790,16 +802,56 @@ void generateSetOfNumbers(int arr[], int n)
 
 void mouseline12(int button, int state,int x1, int y1)
 {	
+	cout<<"here"<<endl;
+	
 	if(button==GLUT_LEFT_BUTTON && state==GLUT_DOWN)
 	{
+		x1 = ((float)1000/1300)*x1 - 500;
+		y1 = 500 - ((float)1000/750)*y1;
+		cout<<"here5"<<endl;
+		cout<<x1<<" "<<y1<<endl;
 		if(x1>minx[3] && x1<maxx[3] && y1>miny[3] && y1<maxy[3])
 		{
+			cout<<"here1"<<endl;
 			glBegin(GL_POLYGON);
 				glColor4f(0.486, 0.988, 0.000,1);
 				glVertex2f(minx[3],miny[3]);
 				glVertex2f(maxx[3],miny[3]);
 				glVertex2f(maxx[3],maxy[3]);
 				glVertex2f(minx[3],maxy[3]);
+			glEnd();
+		}
+		else if(x1>minx[0] && x1<maxx[0] && y1>miny[0] && y1<maxy[0])
+		{
+			cout<<"here2"<<endl;
+			glBegin(GL_POLYGON);
+				glColor4f(0.486, 0.988, 0.000,1);
+				glVertex2f(minx[0],miny[0]);
+				glVertex2f(maxx[0],miny[0]);
+				glVertex2f(maxx[0],maxy[0]);
+				glVertex2f(minx[0],maxy[0]);
+			glEnd();
+		}
+		else if(x1>minx[1] && x1<maxx[1] && y1>miny[1] && y1<maxy[1])
+		{	
+			cout<<"here3"<<endl;
+			glBegin(GL_POLYGON);
+				glColor4f(0.486, 0.988, 0.000,1);
+				glVertex2f(minx[1],miny[1]);
+				glVertex2f(maxx[1],miny[1]);
+				glVertex2f(maxx[1],maxy[1]);
+				glVertex2f(minx[1],maxy[1]);
+			glEnd();
+		}
+		else if(x1>minx[2] && x1<maxx[2] && y1>miny[2] && y1<maxy[2])
+		{
+			cout<<"here4"<<endl;
+			glBegin(GL_POLYGON);
+				glColor4f(0.486, 0.988, 0.000,1);
+				glVertex2f(minx[2],miny[2]);
+				glVertex2f(maxx[2],miny[2]);
+				glVertex2f(maxx[2],maxy[2]);
+				glVertex2f(minx[2],maxy[2]);
 			glEnd();
 		}
 	}
