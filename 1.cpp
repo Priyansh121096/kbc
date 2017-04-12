@@ -312,6 +312,7 @@ void key_func(unsigned char key,int x,int y)
 
 			if(obj.newuser(name))
 			{
+				//cout<<"here"<<endl;
 				new_game=0;
 				return_from_nglg = 1;
 			}
@@ -356,7 +357,6 @@ void key_func(unsigned char key,int x,int y)
 				return;
 			}
 		}
-		
         glutPostRedisplay();
 	}
 
@@ -421,6 +421,26 @@ void show_menu()
 	draw_font("Help",px[4]+140,py[4]-45);
 }
 
+void show_ques(Question *q)
+{
+	show_background(1);
+	draw_option(0);
+	glColor3f(0.8,0.2,0.2);
+	draw_font(q->ques,px[0]+125,py[0]-45);
+	draw_option(1);
+	glColor3f(0.8,0.2,0.2);
+	draw_font(q->cAns.ans,px[1]+122,py[1]-45);
+	draw_option(2);
+	glColor3f(0.8,0.2,0.2);
+	draw_font(q->wAns[0].ans,px[2]+120,py[2]-45);
+	draw_option(3);
+	glColor3f(0.8,0.2,0.2);
+	draw_font(q->wAns[1].ans,px[3]+120,py[3]-45);
+	draw_option(4);
+	glColor3f(0.8,0.2,0.2);
+	draw_font(q->wAns[2].ans,px[4]+140,py[4]-45);
+}
+
 void show_background(int i)
 {
 	glEnable(GL_TEXTURE_2D);
@@ -469,7 +489,8 @@ void display(void)
 		idle();
 		if(already_exists)
 			already(0);
-		return_from_nglg = 1;
+		else
+			return_from_nglg = 1;
 	}
 
 	else if(load_game)
@@ -479,7 +500,8 @@ void display(void)
 		idle();
 		if(does_not_exist)
 			does(0);
-		return_from_nglg = 1;
+		else
+			return_from_nglg = 1;
 	}
 	
 	else if(high_score)
@@ -498,12 +520,11 @@ void display(void)
 		return_from_hs=0;
 	}
 
-	else if(return_from_nglg)
+	else
 	{
 		show_background(1);
 		idle3();
 	}
-
 	GLuint tx1,tx2;
 
 	/*if(!game_menu&&!(new_game==1||load_game==1))
@@ -657,6 +678,8 @@ void idle3(void)
 		getline(fp,buf);
 		getline(fp,buf);
 	}
+	getline(fp,buf);
+ 
 	getline(fp,q.ques);
 	getline(fp,q.cAns.ans);
 	getline(fp,q.wAns[0].ans);
@@ -664,58 +687,83 @@ void idle3(void)
 	getline(fp,q.wAns[2].ans);
 	audiencePoll(&q);
 	fiftyFifty(&q);
-	cout<<q.ques<<endl;
 
-	glBegin(GL_LINE_STRIP);
-		glColor4f(1.0, 1.0, 1.0,1);
+	glBegin(GL_POLYGON);
+		glColor4f(0.294, 0.000, 0.510,1);
 		glVertex2f(-360,0);
 		glVertex2f(360,0);
 		glVertex2f(360,-150);
 		glVertex2f(-360,-150);
-		glVertex2f(-360,0);
 	glEnd();
 
-	glBegin(GL_LINE_STRIP);
-		glColor4f(1.0, 1.0, 1.0,1);
+	glBegin(GL_POLYGON);
+		glColor4f(0.282, 0.239, 0.545,1);
 		glVertex2f(-480,-200);
 		glVertex2f(-200,-200);
 		glVertex2f(-200,-300);
 		glVertex2f(-480,-300);
-		glVertex2f(-480,-200);
 	glEnd();
 	
-	glBegin(GL_LINE_STRIP);
-		glColor4f(1.0, 1.0, 1.0,1);
+	glBegin(GL_POLYGON);
+		glColor4f(0.282, 0.239, 0.545,1);
 		glVertex2f(200,-200);
 		glVertex2f(480,-200);
 		glVertex2f(480,-300);
 		glVertex2f(200,-300);
-		glVertex2f(200,-200);
 	glEnd();
 
-	glBegin(GL_LINE_STRIP);
-		glColor4f(1.0, 1.0, 1.0,1);
+	glBegin(GL_POLYGON);
+		glColor4f(0.282, 0.239, 0.545,1);
 		glVertex2f(-480,-400);
 		glVertex2f(-200,-400);
 		glVertex2f(-200,-500);
 		glVertex2f(-480,-500);
-		glVertex2f(-480,-400);
 	glEnd();
 	
-	glBegin(GL_LINE_STRIP);
-		glColor4f(1.0, 1.0, 1.0,1);
+	glBegin(GL_POLYGON);
+		glColor4f(0.282, 0.239, 0.545,1);
 		glVertex2f(200,-400);
 		glVertex2f(480,-400);
 		glVertex2f(480,-500);
 		glVertex2f(200,-500);
-		glVertex2f(200,-400);
 	glEnd();
 
-	/*GLvoid *font_style = GLUT_BITMAP_TIMES_ROMAN_24;
+	char ques[140];
+	strcpy(ques, q.ques.c_str());
+	GLvoid *font_style = GLUT_BITMAP_TIMES_ROMAN_24;
 	glColor4f(1.0, 1.0, 1.0,1);
-	glRasterPos2f (-350, -10);
-	for (int i = 0; q.ques[i] != '\0'; i++)
-		glutBitmapCharacter(font_style, q.ques[i]);*/
+	glRasterPos2f (-270, -70);
+	for (int i = 0; ques[i] != '\0'; i++)
+		glutBitmapCharacter(font_style, ques[i]);
+	
+	char ans[40];
+	strcpy(ans, q.cAns.ans.c_str());
+	//GLvoid *font_style = GLUT_BITMAP_TIMES_ROMAN_24;
+	glColor4f(1.0, 1.0, 1.0,1);
+	glRasterPos2f (-400, -230);
+	for (int i = 0; ans[i] != '\0'; i++)
+		glutBitmapCharacter(font_style, ans[i]);
+
+	strcpy(ans, q.wAns[0].ans.c_str());
+	//GLvoid *font_style = GLUT_BITMAP_TIMES_ROMAN_24;
+	glColor4f(1.0, 1.0, 1.0,1);
+	glRasterPos2f (250, -230);
+	for (int i = 0; ans[i] != '\0'; i++)
+		glutBitmapCharacter(font_style, ans[i]);
+
+	strcpy(ans, q.wAns[1].ans.c_str());
+	//GLvoid *font_style = GLUT_BITMAP_TIMES_ROMAN_24;
+	glColor4f(1.0, 1.0, 1.0,1);
+	glRasterPos2f (-400, -440);
+	for (int i = 0; ans[i] != '\0'; i++)
+		glutBitmapCharacter(font_style, ans[i]);
+
+	strcpy(ans, q.wAns[2].ans.c_str());
+	//GLvoid *font_style = GLUT_BITMAP_TIMES_ROMAN_24;
+	glColor4f(1.0, 1.0, 1.0,1);
+	glRasterPos2f (250, -440);
+	for (int i = 0; ans[i] != '\0'; i++)
+		glutBitmapCharacter(font_style, ans[i]);
 
 }
 
