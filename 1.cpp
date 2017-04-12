@@ -18,6 +18,7 @@ int menuw;
 GLuint tex[5];
 char name[32];
 double px[]={-480,-480,-480,-480,-480}, py[]={200,100,0,-100,-200},transp[]={1,0.2,0.2,0.2,0.2};
+double minx[4],maxx[4],miny[4],maxy[4];
 
 struct corrAns
 {
@@ -193,6 +194,8 @@ void idle(void);
 //void Idle(void);
 void idle2(void);
 void idle3(void);
+void mouseline12(int button, int state,int x1, int y1);
+void generateSetOfNumbers(int arr[], int n);
 void audiencePoll(Question *q);
 void fiftyFifty(Question *q);
 void already(int x);
@@ -217,6 +220,7 @@ int main(int argc, char *argv[])
     glutKeyboardFunc(key_func);
     glutSpecialFunc(SpecialKey);
     glutDisplayFunc(display);
+    glutMouseFunc(mouseline12);
     glutIdleFunc(idle);
     glutMainLoop();
 
@@ -735,36 +739,70 @@ void idle3(void)
 	glRasterPos2f (-270, -70);
 	for (int i = 0; ques[i] != '\0'; i++)
 		glutBitmapCharacter(font_style, ques[i]);
-	
-	char ans[40];
-	strcpy(ans, q.cAns.ans.c_str());
-	//GLvoid *font_style = GLUT_BITMAP_TIMES_ROMAN_24;
-	glColor4f(1.0, 1.0, 1.0,1);
-	glRasterPos2f (-400, -230);
-	for (int i = 0; ans[i] != '\0'; i++)
-		glutBitmapCharacter(font_style, ans[i]);
 
-	strcpy(ans, q.wAns[0].ans.c_str());
-	//GLvoid *font_style = GLUT_BITMAP_TIMES_ROMAN_24;
-	glColor4f(1.0, 1.0, 1.0,1);
-	glRasterPos2f (250, -230);
-	for (int i = 0; ans[i] != '\0'; i++)
-		glutBitmapCharacter(font_style, ans[i]);
+	char ans[40];	
+	double c2x[] = {-400,250,-400,250};
+	double c2y[] = {-230,-230,-440,-440};
+	double minx2[] = {-480,200,-480,200};
+	double miny2[] = {-300,-300,-500,-500};
+	double maxx2[] = {-200,480,-200,480};
+	double maxy2[] = {-200,-200,-400,-400};
+	int k[4];
+	generateSetOfNumbers(k,4);	
+	for(i=0;i<4;i++)
+	{
+		if(k[i]==3)
+		{
+			strcpy(ans, q.cAns.ans.c_str());
+			minx[3] = minx2[i];
+			miny[3] = miny2[i];
+			maxx[3] = maxx2[i];
+			maxy[3] = maxy2[i];
+		}
+		else
+		{
+			strcpy(ans, q.wAns[k[i]].ans.c_str());
+			minx[k[i]] = minx2[i];
+			miny[k[i]] = miny2[i];
+			maxx[k[i]] = maxx2[i];
+			maxy[k[i]] = maxy2[i];
+		}
+		glColor4f(1.0, 1.0, 1.0,1);
+		glRasterPos2f (c2x[i], c2y[i]);
+		for (int i = 0; ans[i] != '\0'; i++)
+			glutBitmapCharacter(font_style, ans[i]);
+	}
+}
 
-	strcpy(ans, q.wAns[1].ans.c_str());
-	//GLvoid *font_style = GLUT_BITMAP_TIMES_ROMAN_24;
-	glColor4f(1.0, 1.0, 1.0,1);
-	glRasterPos2f (-400, -440);
-	for (int i = 0; ans[i] != '\0'; i++)
-		glutBitmapCharacter(font_style, ans[i]);
+void generateSetOfNumbers(int arr[], int n)
+{
+	int p[4] = {0,1,2,3};
+	for (int i=3; i>0; --i)
+	{
+		int j = rand()%i;
+		int temp = p[i];
+		p[i] = p[j];
+		p[j] = temp;
+	}
+	for (int i=0; i<n; ++i)
+		arr[i] = p[i];
+}
 
-	strcpy(ans, q.wAns[2].ans.c_str());
-	//GLvoid *font_style = GLUT_BITMAP_TIMES_ROMAN_24;
-	glColor4f(1.0, 1.0, 1.0,1);
-	glRasterPos2f (250, -440);
-	for (int i = 0; ans[i] != '\0'; i++)
-		glutBitmapCharacter(font_style, ans[i]);
-
+void mouseline12(int button, int state,int x1, int y1)
+{	
+	if(button==GLUT_LEFT_BUTTON && state==GLUT_DOWN)
+	{
+		if(x1>minx[3] && x1<maxx[3] && y1>miny[3] && y1<maxy[3])
+		{
+			glBegin(GL_POLYGON);
+				glColor4f(0.486, 0.988, 0.000,1);
+				glVertex2f(minx[3],miny[3]);
+				glVertex2f(maxx[3],miny[3]);
+				glVertex2f(maxx[3],maxy[3]);
+				glVertex2f(minx[3],maxy[3]);
+			glEnd();
+		}
+	}
 }
 
 void audiencePoll(Question *q)
