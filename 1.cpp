@@ -971,6 +971,8 @@ void mouseline12(int button, int state,int x1, int y1)
 			return_from_qa = 1;
 			score = score_array[level];
 			cout<<"Score: "<<score<<endl;
+			obj.high_score = score;
+			obj.update();
 			//idle4(&Q,option_selected);
 			//sleep(2);
 			if(level<4)
@@ -985,6 +987,8 @@ void mouseline12(int button, int state,int x1, int y1)
 				score = score_array[level];
 				cout<<"Won"<<endl;
 				cout<<"Score: "<<score<<endl;
+				obj.high_score = score;
+				obj.update();
 			
 				sleep(2);
 				glutCreateSubWindow(1,400,200,400,200);
@@ -1023,6 +1027,8 @@ void mouseline12(int button, int state,int x1, int y1)
 			score = score_array[level];
 			cout<<"Lost"<<endl;
 			cout<<"Score: "<<score<<endl;
+			obj.high_score = score;
+			obj.update();
 			//idle4(&Q,option_selected);
 			sleep(2);
 			
