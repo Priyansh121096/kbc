@@ -13,7 +13,7 @@ using namespace std;
 volatile int stopsound = 0;
 volatile int game_menu;
 int new_game = 0,load_game = 0,high_score = 0,already_exists = 0, does_not_exist = 0,return_from_nglg = 0,return_from_hs = 0,return_from_qa = 0,option_selected = 1000,help=0,time_ans;
-int level = 0,active_option = 0;
+int qlevel = 0,active_option = 0;
 int menuw;
 GLuint tex[5];
 char name[32];
@@ -31,9 +31,14 @@ int maxx2[] = {-200,480,-200,480,360};
 int maxy2[] = {-200,-200,-350,-350,0};
 int correct = 1;
 int score = 0;
-int score_array[5] = {1000,10000,100000,1000000,10000000};
+int score_array[] = {0,1000,10000,100000,1000000,10000000};
 int nq;
-int flag = 1,adt;
+int adt;
+float dcol[] = {0.282, 0.239, 0.545,1};
+float ccol[] = {0.486, 0.988, 0.000,1};
+float wcol[] = {0.863, 0.078, 0.235,1};
+float col[][4] = {{dcol[0],dcol[1],dcol[2],dcol[3]},{dcol[0],dcol[1],dcol[2],dcol[3]},{dcol[0],dcol[1],dcol[2],dcol[3]},{dcol[0],dcol[1],dcol[2],dcol[3]}};
+bool answered = false,ffa=true,apa=true,apu=false;
 
 struct corrAns
 {
@@ -214,23 +219,29 @@ void draw_option(int i);
 void draw_font(string s,double x,double y);
 void display(void);
 void idle(void);
-//void Idle(void);
 void drawButton1(const char *text, int length ,int x ,int y );
 void idle2(void);
 void idle_about(void);
 void chooseQuestion(Question *q);
-void idle3(Question *Q);
-void idle4(Question *Q, int opt);
+void idle3(Question *Q, int opt);
+//void idle4(Question *Q, int opt);
 void mouseline12(int button, int state,int x1, int y1);
 void mouseline11(int button, int state,int x1, int y1);
-void generateSetOfNumbers(int arr[], int n);
+void generateSetOfNumbers(int arr[], int n,int k);
 void audiencePoll(Question *q);
 void fiftyFifty(Question *q);
 void already(int x);
 void does(int x);
 void drawButton(const char *text, int length ,int x ,int y );
+void drawButton1(const char *text, int length ,int x ,int y );
+void drawButton2(const char *text, int length ,int x ,int y );
 void drawText(const char *text, int length ,int x ,int y );
+void createSubWindow(string msg);
 void timer(int );
+void idlefunc()
+{
+	idle3(&Q,option_selected);
+}
 
 int main(int argc, char *argv[]) 
 {
@@ -251,7 +262,7 @@ int main(int argc, char *argv[])
     glutDisplayFunc(display);
     glutMouseFunc(mouseline12);
     glutTimerFunc(0,timer,0);
-    glutIdleFunc(idle);
+    //glutIdleFunc(idlefunc);
     glutMainLoop();
 
     stopsound=1;
@@ -521,8 +532,7 @@ void display(void)
 	int i;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glColor3f(0.4,0.5,0.1);
-	//cout<<"hereljdl"<<endl;
-	//cout<<return_from_qa<<endl;
+	cout<<"Ans: "<< answered<<endl;
 	if (game_menu)
 	{
 		//cout<<"Yaha hoon7"<<endl;
@@ -547,12 +557,10 @@ void display(void)
 		//cout<<"Yaha hoon3"<<endl;
 		show_background(1);
 		idle_about();
-        help=0;
 	}
 	else if(load_game)
 	{
-		//cout<<"Yaha hoon4"<<endl;
-		//glClear(GL_COLOR_BUFFER_BIT);   
+		//cout<<"Yaha hoon4"<<endl;   
 		show_background(2);
 		idle();
 		if(does_not_exist)
@@ -566,12 +574,12 @@ void display(void)
 	
 	else if(high_score)
 	{
-		//cout<<"Yaha hoon5"<<endl;
-		//glClear(GL_COLOR_BUFFER_BIT);   
+		//cout<<"Yaha hoon5"<<endl;   
 		show_background(2);
 		idle();
 		if(does_not_exist)
 			does(0);
+		return_from_hs=0;
 	}
 
 	else if(return_from_hs)
@@ -579,31 +587,52 @@ void display(void)
 		//cout<<"Yaha hoon6"<<endl;
 		show_background(1);
 		idle2();
-		return_from_hs=0;
 	}
 
-	else if(return_from_qa)
+	else if(answered)
 	{
 		show_background(1);
 		//cout<<"Yaha hoon"<<endl;
-		idle4(&Q,option_selected);
+		if(option_selected==3)
+		{
+			for(int i=0;i<4;i++)
+				col[k[3]][i] = ccol[i];
+		}
+		else
+		{
+			for(int i=0;i<4;i++)
+				col[k[3]][i] = ccol[i];
+			for(int i=0;i<4;i++)
+				col[k[option_selected]][i] = wcol[i];
+		}
+		idle3(&Q,option_selected);
+		sleep(1);
+		answered = false;
 		//return_from_qa = 0;
 	}
 
-	else //if(return_from_nglg && firsttime2)
+	else //if(return_from_qa)
 	{
+		if(firsttime2)
+		{
+			for(int i=0;i<3;i++)
+				for(int j=0;j<4;j++)
+					col[i][j] = dcol[j];
+			chooseQuestion(&Q);
+			generateSetOfNumbers(k,4,4);
+			firsttime2 = 0;
+			adt=(float)glutGet(GLUT_ELAPSED_TIME)/1000;
+		}
 		show_background(1);
-		idle3(&Q);
+		idle3(&Q, option_selected);
 		//cout<<"Yaha hoon2"<<endl;
-		cout<<return_from_qa<<endl;
 	}
 	glFlush();
 	glutSwapBuffers();
-	//glutPostRedisplay();
 }
 void idle_about(void)
 {
-
+	cout<<"idle_about"<<endl;
 	char string[20] = "KBC GAME";
 	GLvoid *font_style = GLUT_BITMAP_TIMES_ROMAN_24;
 	glColor4f(1.0, 1.0, 1.0,1);
@@ -634,7 +663,8 @@ void idle_about(void)
 	glRasterPos2f (-100, -100);
 	    for (int i = 0; string4[i] != '\0'; i++)
 	    	glutBitmapCharacter(font_style, string4[i]);
-	std::string text = "back";  
+
+	std::string text = "Back";  
 	drawButton(text.data(),text.size(),-70,-200);
 	glutMouseFunc(mouseline12);  		    		    	
 	glFlush();
@@ -643,12 +673,13 @@ void idle_about(void)
 
 void idle(void)
 {
+	cout<<"idle"<<endl;
 	static int y=0;
 	if(new_game==0 && load_game==0 && high_score==0)
 		return ;
 
 	char string[40] = "Enter Your Name";
-
+	glLineWidth(1.0);
 	glBegin(GL_LINE_STRIP);
 		glColor4f(1.0, 1.0, 1.0,1);
 		glVertex2f(-120,135);
@@ -685,32 +716,12 @@ void idle(void)
 	glFlush();
 }
 
-/*void Idle(void)
-{
-	fq++;
-	fq2++;
-	//int yc=35;
-	if(fq==1000)
-	{
-		fq=0;
-		//if(!pause_game)
-			glutPostRedisplay();
-	}
-	if(fq2==10e4)
-	{
-		fq2=0;
-		if(!game_menu&&!(new_game==1||load_game==1))
-		{
-			
-		}
-	}
-}*/
-
 void idle2(void)
 {
+	cout<<"idle2"<<endl;
 	if(return_from_hs==0)
 		return ;
-
+	glLineWidth(1.0);
 	char string1[40] = "High Score";
 	int hs = obj.high_score;
 	string h = to_string(hs);
@@ -746,11 +757,16 @@ void idle2(void)
 		glutBitmapCharacter(font_style, h[i]);
 
 	glFlush();
+	std::string text = "Back";  
+	drawButton(text.data(),text.size(),-70,-200);
+	glutMouseFunc(mouseline12);  		    		    	
+	glFlush();
 }
 
 int firsttime3 = 1;
 void chooseQuestion(Question *q)
 {
+	cout<<"chooseQuestion"<<endl;
 	ifstream fp;
 	fp.open("ques1.txt");
 	if(firsttime3)
@@ -758,15 +774,12 @@ void chooseQuestion(Question *q)
 		firsttime3 = 0;
 		fp >> nq;
 		cout<<nq<<endl;
-		generateSetOfNumbers(order_of_ques,nq);
+		generateSetOfNumbers(order_of_ques,5,nq);
 		for(int i=0;i<5;i++)
 			cout<<order_of_ques[i]<<" ";
 		cout<<endl;
 	}
-	//cout<<nq<<endl;
-	int i = order_of_ques[level];
-	//cout<<i<<endl;
-	//Question q;
+	int i = order_of_ques[qlevel];
 	string buf;
 	for(int j=0;j<i;j++)
 	{
@@ -784,16 +797,14 @@ void chooseQuestion(Question *q)
 	getline(fp,q->wAns[1].ans);
 	getline(fp,q->wAns[2].ans);
 	audiencePoll(q);
-	fiftyFifty(q);
+	for(int i=0;i<3;i++)
+		q->wAns[i].flag = true;
+	//fiftyFifty(q);
 }
 
-void idle3(Question *Q)
+void idle3(Question *Q,int opt)
 {	
-	cout<<"here"<<endl;
-	if(firsttime2)
-	{
-		chooseQuestion(Q);
-	}
+	cout<<"idle3"<<endl;
 	glBegin(GL_POLYGON);
 		glColor4f(0.294, 0.000, 0.510,1);
 		glVertex2f(minx2[4],maxy2[4]);
@@ -803,40 +814,75 @@ void idle3(Question *Q)
 	glEnd();
 	minx[4] = minx2[4];miny[4] = miny2[4];maxx[4] = maxx2[4];maxy[4] = maxy2[4];
 
-	glBegin(GL_POLYGON);
-		glColor4f(0.282, 0.239, 0.545,1);
-		glVertex2f(minx2[0],maxy2[0]);
-		glVertex2f(maxx2[0],maxy2[0]);
-		glVertex2f(maxx2[0],miny2[0]);
-		glVertex2f(minx2[0],miny2[0]);
-	glEnd();
+	for(int i=0;i<4;i++)
+	{
+		glBegin(GL_POLYGON);
+			glColor4f(col[i][0], col[i][1], col[i][2],col[i][3]);
+			glVertex2f(minx2[i],maxy2[i]);
+			glVertex2f(maxx2[i],maxy2[i]);
+			glVertex2f(maxx2[i],miny2[i]);
+			glVertex2f(minx2[i],miny2[i]);
+		glEnd();
+	}
 	
-	glBegin(GL_POLYGON);
-		glColor4f(0.282, 0.239, 0.545,1);
-		glVertex2f(minx2[1],maxy2[1]);
-		glVertex2f(maxx2[1],maxy2[1]);
-		glVertex2f(maxx2[1],miny2[1]);
-		glVertex2f(minx2[1],miny2[1]);
-	glEnd();
+	if(ffa)
+	{
+		string text = "Fifty-Fifty";  
+		drawButton2(text.data(),text.size(),-350,350);
+		glutMouseFunc(mouseline12);
+	}
 
-	glBegin(GL_POLYGON);
-		glColor4f(0.282, 0.239, 0.545,1);
-		glVertex2f(minx2[2],maxy2[2]);
-		glVertex2f(maxx2[2],maxy2[2]);
-		glVertex2f(maxx2[2],miny2[2]);
-		glVertex2f(minx2[2],miny2[2]);
-	glEnd();
-	
-	glBegin(GL_POLYGON);
-		glColor4f(0.282, 0.239, 0.545,1);
-		glVertex2f(minx2[3],maxy2[3]);
-		glVertex2f(maxx2[3],maxy2[3]);
-		glVertex2f(maxx2[3],miny2[3]);
-		glVertex2f(minx2[3],miny2[3]);
-	glEnd();
-    std::string text = "quit";  
+	if(apa)
+	{
+		string text = "Audience Poll";  
+		drawButton2(text.data(),text.size(),-350,220);
+		glutMouseFunc(mouseline12);
+	}
+
+	if(apu)
+	{	
+		string opt[4] = {"A","B","C","D"};
+		for(int i=0;i<4;i++)
+		{
+			if(k[i]!=3 && Q->wAns[k[i]].flag)
+			{
+				string st = opt[i];
+				GLvoid *font_style = GLUT_BITMAP_TIMES_ROMAN_24;
+				glColor4f(1.0, 1.0, 1.0,1);
+				glRasterPos2f (-350+i*20,20);
+				for (int i = 0; st[i] != '\0'; i++)
+					glutBitmapCharacter(font_style, st[i]);
+				glBegin(GL_POLYGON);
+					glColor4f(dcol[0], dcol[1], dcol[2],dcol[3]);
+					glVertex2f(-350+i*20,60+Q->wAns[k[i]].prob);
+					glVertex2f(-340+i*20,60+Q->wAns[k[i]].prob);
+					glVertex2f(-340+i*20,60);
+					glVertex2f(-350+i*20,60);
+				glEnd();
+			}
+			else if(k[i]==3)
+			{
+				string st = opt[i];
+				GLvoid *font_style = GLUT_BITMAP_TIMES_ROMAN_24;
+				glColor4f(1.0, 1.0, 1.0,1);
+				glRasterPos2f (-350+i*20,20);
+				for (int i = 0; st[i] != '\0'; i++)
+					glutBitmapCharacter(font_style, st[i]);
+				glBegin(GL_POLYGON);
+					glColor4f(dcol[0], dcol[1], dcol[2],dcol[3]);
+					glVertex2f(-350+i*20,60+Q->cAns.prob);
+					glVertex2f(-340+i*20,60+Q->cAns.prob);
+					glVertex2f(-340+i*20,60);
+					glVertex2f(-350+i*20,60);
+				glEnd();
+			}
+		}
+	}
+
+    string text = "Forfeit";  
 	drawButton1(text.data(),text.size(),-50,-400);
 	glutMouseFunc(mouseline12);
+	
 	char ques[140];
 	strcpy(ques, Q->ques.c_str());
 	GLvoid *font_style = GLUT_BITMAP_TIMES_ROMAN_24;
@@ -846,10 +892,10 @@ void idle3(Question *Q)
 		glutBitmapCharacter(font_style, ques[i]);
 
 	char ans[40];	
-	if(firsttime2)
+	/*if(firsttime2 && !answered)
 	{
-		generateSetOfNumbers(k,4);	
-	}
+		generateSetOfNumbers(k,4,4);	
+	}*/
 	for(int i=0;i<4;i++)
 	{
 		if(k[i]==3)
@@ -859,9 +905,6 @@ void idle3(Question *Q)
 			miny[3] = miny2[i];
 			maxx[3] = maxx2[i];
 			maxy[3] = maxy2[i];
-			/*cout<<"Correct coordinates"<<endl;
-			cout<<minx[3]<<" "<<miny[3]<<endl;
-			cout<<maxx[3]<<" "<<maxy[3]<<endl;*/
 		}
 		else
 		{
@@ -871,13 +914,14 @@ void idle3(Question *Q)
 			maxx[k[i]] = maxx2[i];
 			maxy[k[i]] = maxy2[i];
 		}
-		glColor4f(1.0, 1.0, 1.0,1);
-		glRasterPos2f (c2x[i], c2y[i]);
-		for (int i = 0; ans[i] != '\0'; i++)
-			glutBitmapCharacter(font_style, ans[i]);
+		if(k[i]==3 || Q->wAns[k[i]].flag)
+		{
+			glColor4f(1.0, 1.0, 1.0,1);
+			glRasterPos2f (c2x[i], c2y[i]);
+			for (int i = 0; ans[i] != '\0'; i++)
+				glutBitmapCharacter(font_style, ans[i]);
+		}
 	}
-	firsttime2 = 0;
-	flag = 0;
 	string st = "TIMER";
 	glRasterPos2f (303,350);
 	for (int i = 0; st[i] != '\0'; i++)
@@ -907,141 +951,15 @@ void idle3(Question *Q)
 		glutMouseFunc(mouseline11);
 		glutSwapBuffers();
 	}
-//	sprintf(time_str,"%d",time_ans);
-      
-//			for (int i = 0; i<2; i++)
-//			glutBitmapCharacter(font_style, time_str[i]);
-//			time_ans--;
+	//answered = false;
 }
 
-/*void idle4(void)
+void generateSetOfNumbers(int arr[], int n, int k)
 {
-		if(option_selected==3)
-		{
-			//cout<<"here1"<<endl;
-			glBegin(GL_POLYGON);
-				glColor4f(0.486, 0.988, 0.000,1);
-				glVertex2f(minx[3],miny[3]);
-				glVertex2f(maxx[3],miny[3]);
-				glVertex2f(maxx[3],maxy[3]);
-				glVertex2f(minx[3],maxy[3]);
-			glEnd();
-		}
-		else if(option_selected<3)
-		{
-			int i = option_selected;
-			//cout<<"here2"<<endl;
-			glBegin(GL_POLYGON);
-				glColor4f(0.863, 0.078, 0.235,1);
-				glVertex2f(minx[i],miny[i]);
-				glVertex2f(maxx[i],miny[i]);
-				glVertex2f(maxx[i],maxy[i]);
-				glVertex2f(minx[i],maxy[i]);
-			glEnd();
-		}
-}*/
-
-void idle4(Question *Q,int opt)
-{
-	cout<<"haddan"<<endl;
-	glBegin(GL_POLYGON);
-		glColor4f(0.294, 0.000, 0.510,1);
-		glVertex2f(minx[4],maxy[4]);
-		glVertex2f(maxx[4],maxy[4]);
-		glVertex2f(maxx[4],miny[4]);
-		glVertex2f(minx[4],miny[4]);
-	glEnd();
-	if(opt==3)
-	{
-		for(int i=0;i<=2;i++)
-		{
-			glBegin(GL_POLYGON);
-				glColor4f(0.282, 0.239, 0.545,1);
-				glVertex2f(minx[i],maxy[i]);
-				glVertex2f(maxx[i],maxy[i]);
-				glVertex2f(maxx[i],miny[i]);
-				glVertex2f(minx[i],miny[i]);
-			glEnd();
-		}
-		glBegin(GL_POLYGON);
-			glColor4f(0.486, 0.988, 0.000,1);
-			glVertex2f(minx[3],maxy[3]);
-			glVertex2f(maxx[3],maxy[3]);
-			glVertex2f(maxx[3],miny[3]);
-			glVertex2f(minx[3],miny[3]);
-		glEnd();
-		adt=(float)glutGet(GLUT_ELAPSED_TIME)/1000;
-	}
-	else
-	{
-		for(int i=0;i<=2;i++)
-		{
-			if(i==opt)
-				continue;
-			glBegin(GL_POLYGON);
-				glColor4f(0.282, 0.239, 0.545,1);
-				glVertex2f(minx[i],maxy[i]);
-				glVertex2f(maxx[i],maxy[i]);
-				glVertex2f(maxx[i],miny[i]);
-				glVertex2f(minx[i],miny[i]);
-			glEnd();
-		}
-		glBegin(GL_POLYGON);
-			glColor4f(0.863, 0.078, 0.235,1);
-			glVertex2f(minx[opt],maxy[opt]);
-			glVertex2f(maxx[opt],maxy[opt]);
-			glVertex2f(maxx[opt],miny[opt]);
-			glVertex2f(minx[opt],miny[opt]);
-		glEnd();
-	
-		glBegin(GL_POLYGON);
-			glColor4f(0.486, 0.988, 0.000,1);
-			glVertex2f(minx[3],maxy[3]);
-			glVertex2f(maxx[3],maxy[3]);
-			glVertex2f(maxx[3],miny[3]);
-			glVertex2f(minx[3],miny[3]);
-		glEnd();
-			
-	}
-
-	char ques[140];
-	strcpy(ques, Q->ques.c_str());
-	GLvoid *font_style = GLUT_BITMAP_TIMES_ROMAN_24;
-	glColor4f(1.0, 1.0, 1.0,1);
-	glRasterPos2f (c2x[4], c2y[4]);
-	for (int i = 0; ques[i] != '\0'; i++)
-		glutBitmapCharacter(font_style, ques[i]);
-
-	char ans[40];	
-	for(int i=0;i<4;i++)
-	{
-		if(k[i]==3)
-		{
-			strcpy(ans, Q->cAns.ans.c_str());
-			/*cout<<"Correct coordinates"<<endl;
-			cout<<minx[3]<<" "<<miny[3]<<endl;
-			cout<<maxx[3]<<" "<<maxy[3]<<endl;*/
-		}
-		else
-		{
-			strcpy(ans, Q->wAns[k[i]].ans.c_str());
-		}
-		glColor4f(1.0, 1.0, 1.0,1);
-		glRasterPos2f (c2x[i], c2y[i]);
-		for (int i = 0; ans[i] != '\0'; i++)
-			glutBitmapCharacter(font_style, ans[i]);
-	}
-	
-	sleep(1);
-	return_from_qa = 0;
-}
-
-void generateSetOfNumbers(int arr[], int n)
-{
-	int p[n];
-	for(int i=0;i<n;i++)
+	int p[k];
+	for(int i=0;i<k;i++)
 		p[i] = i;
-	for (int i=n-1; i>0; --i)
+	for (int i=k-1; i>0; --i)
 	{
 		int j = rand()%i;
 		int temp = p[i];
@@ -1053,116 +971,136 @@ void generateSetOfNumbers(int arr[], int n)
 }
 
 void mouseline12(int button, int state,int x1, int y1)
-{	
-	//cout<<"here"<<endl;
-	
+{
+	cout<<"mouseline12"<<endl;
 	if(button==GLUT_LEFT_BUTTON && state==GLUT_DOWN)
 	{
 		x1 = ((float)1000/1300)*x1 - 500;
 		y1 = 500 - ((float)1000/750)*y1;
-		
-		//cout<<"here5"<<endl;
 		cout<<x1<<" "<<y1<<endl;
+		apu = false;
 		if(x1>minx[3] && x1<maxx[3] && y1>miny[3] && y1<maxy[3])
-		{	option_selected = 3;
-			return_from_nglg = 0;
-			return_from_qa = 1;
+		{
+			answered = true;
+			option_selected = 3;
 			time_ans = 30;
-			score = score_array[level];
-			cout<<"Score: "<<score<<endl;
-			obj.high_score = score;
-			obj.update();
-			//idle4(&Q,option_selected);
-			//sleep(2);
-			if(level<4)
+			if(qlevel<4)
 			{
-				level++;
-				load_game=0;new_game=0;game_menu=0;return_from_nglg=1;firsttime2 = 1;
-				return_from_qa=1;
+				cout<<"qlevel: "<<qlevel<<endl;
+				qlevel++;
+				score = score_array[qlevel];
+				obj.high_score = score;
+				obj.update();
+				load_game=0;new_game=0;game_menu=0;firsttime2 = 1;
+				return_from_nglg = 0;return_from_qa=1;
 				display();
 			}
 			else
 			{
-				score = score_array[level];
-				cout<<"Won"<<endl;
-				cout<<"Score: "<<score<<endl;
+				//sleep(1);
+				qlevel++;
+				score = score_array[qlevel];
 				obj.high_score = score;
 				obj.update();
-			
-				//sleep(2);
-				glutCreateSubWindow(1,400,200,400,200);
-				glClearColor(0,0,1,1);
-				glMatrixMode(GL_PROJECTION);
-				glLoadIdentity();
-				glOrtho(0.0,200,0.0,200,-1.0,1.0);
-				glMatrixMode(GL_MODELVIEW);
-				glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-				glFlush();
-				glColor3f(1.0,0.4,0.2);
-				string text = "You Won!";
-				drawText(text.data(),text.size(),85,150);
-				text = "Exit";
-				drawButton(text.data(),text.size(),85,100);
-				glutMouseFunc(mouseline11);
-				glutSwapBuffers();
+				createSubWindow("You Won!");
 			}
 		}
-		else if(x1>-48 && x1<-10 && y1>-196 && y1<-164)
+
+		else if(x1>-68 && x1<-30 && y1>-192 && y1<-157)
 		{
 		    game_menu=1;
-			//show_menu();
-			
-		}	
+			help = 0;
+			high_score = 0;
+			for(int i=0;i<strlen(name);i++)
+				name[i] = '\0';
+		}
+	
 		else if(x1>-28 && x1<75 && y1>-400 && y1<-300)
 		{
 		    game_menu=1;
-			//show_menu();
-			//glutPostRedisplay();
-		}			
-		else
+			for(int i=0;i<strlen(name);i++)
+				name[i] = '\0';
+		}
+
+		else if(x1>-350 && x1<-200 && y1>350 && y1<450)
 		{
-			if(x1>minx[0] && x1<maxx[0] && y1>miny[0] && y1<maxy[0])
-			{	
-				option_selected = 0;
-			}
-			else if(x1>minx[1] && x1<maxx[1] && y1>miny[1] && y1<maxy[1])
-			{	
-				option_selected = 1;
-			}
-			else if(x1>minx[2] && x1<maxx[2] && y1>miny[2] && y1<maxy[2])
-			{	
-				option_selected = 2;
-			}
+			ffa = false;
+			fiftyFifty(&Q);		
+		}
+
+		else if(x1>-350 && x1<-200 && y1>220 && y1<320)
+		{
+			apa = false;
+			apu = true;
+		}		
+		
+		else if(x1>minx[0] && x1<maxx[0] && y1>miny[0] && y1<maxy[0])
+		{	
+			answered = true;
+			option_selected = 0;
 			return_from_nglg = 0;
 			return_from_qa = 1;
-			score = score_array[level];
-			cout<<"Lost"<<endl;
-			cout<<"Score: "<<score<<endl;
+			score = score_array[qlevel];
 			obj.high_score = score;
 			obj.update();
-			//idle4(&Q,option_selected);
-			//sleep(2);
-			
-			glutCreateSubWindow(1,400,200,400,200);
-			glClearColor(0,0,1,1);
-			glMatrixMode(GL_PROJECTION);
-			glLoadIdentity();
-			glOrtho(0.0,200,0.0,200,-1.0,1.0);
-			glMatrixMode(GL_MODELVIEW);
-			glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-			glFlush();
-			glColor3f(1.0,0.4,0.2);
-			string text = "You Lost!";
-			drawText(text.data(),text.size(),85,150);
-			text = "Exit";
-			drawButton(text.data(),text.size(),85,100);
-			glutMouseFunc(mouseline11);
-			glutSwapBuffers();
+			createSubWindow("You Lost!");
+		}
+
+		else if(x1>minx[1] && x1<maxx[1] && y1>miny[1] && y1<maxy[1])
+		{	
+			answered = true;
+			option_selected = 1;
+			return_from_nglg = 0;
+			return_from_qa = 1;
+			score = score_array[qlevel];
+			obj.high_score = score;
+			obj.update();
+			createSubWindow("You Lost!");
+		}
+
+		else if(x1>minx[2] && x1<maxx[2] && y1>miny[2] && y1<maxy[2])
+		{	
+			answered = true;
+			option_selected = 2;
+			return_from_nglg = 0;
+			return_from_qa = 1;
+			score = score_array[qlevel];
+			obj.high_score = score;
+			obj.update();
+			createSubWindow("You Lost!");
 		}
 	}	
 	glutPostRedisplay();
 }
-void timer(int ){
+
+void createSubWindow(string msg)
+{
+	glutCreateSubWindow(1,400,200,400,200);
+	glClearColor(0,0,1,1);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(0.0,200,0.0,200,-1.0,1.0);
+	glMatrixMode(GL_MODELVIEW);
+	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+	glFlush();
+	glColor3f(1.0,0.4,0.2);
+	string text = msg;
+	drawText(text.data(),text.size(),85,150);
+	text = "Final Score:";
+	drawText(text.data(),text.size(),85,50);
+	string s1;
+	stringstream co1;
+	co1 << obj.high_score;
+	s1=co1.str();
+	drawText(s1.data(),s1.size(),150,50);
+	text = "Exit";
+	drawButton(text.data(),text.size(),85,100);
+	glutMouseFunc(mouseline11);
+	glutSwapBuffers();
+}
+
+void timer(int )
+{
 	glutPostRedisplay();
 	glutTimerFunc(1000,timer,0);
 }
@@ -1178,22 +1116,20 @@ void mouseline11(int button, int state,int x1, int y1)
 			glutDestroyWindow(w1);	
 			glutDestroyWindow(menuw);
 		}
-		
 	}
 	glFlush();
-	//glutPostRedisplay();
 }
 
 void audiencePoll(Question *q)
 {
 	int sum = 0;
-	q->cAns.prob = rand()%100 + 50;
+	q->cAns.prob = rand()%50 + 50;
 	sum += q->cAns.prob;
 	q->wAns[0].prob = rand()%(100 - sum);
 	sum += q->wAns[0].prob;
 	q->wAns[1].prob = rand()%(100 - sum);
 	sum += q->wAns[1].prob;
-	q->wAns[2].prob = rand()%(100 - sum);
+	q->wAns[2].prob = (100 - sum);
 }
     
 void fiftyFifty(Question *q)
@@ -1236,6 +1172,24 @@ void does(int x)
 		glutBitmapCharacter(font_style, string1[i]);
 	glutPostRedisplay();
 }
+void drawButton2(const char *text, int length ,int x ,int y )
+{	GLvoid *font_style = GLUT_BITMAP_TIMES_ROMAN_24;
+	glLineWidth(5.0);
+	glColor3f(1.000, 0.000, 0.000);
+	glBegin(GL_QUADS);
+        glColor3f(0.373, 0.620, 0.627);
+		glVertex2f(x,y);
+		glVertex2f(x+150,y);
+		glVertex2f(x+150,y+100);
+		glVertex2f(x,y+100);
+	glEnd();
+	glColor3f(0.502, 0.000, 0.502);
+	glRasterPos2i(x+30,y+50);
+	int i;
+	for(i=0;i<length;i++)
+		glutBitmapCharacter(font_style,(int)text[i]);
+}
+
 void drawButton1(const char *text, int length ,int x ,int y )
 {	GLvoid *font_style = GLUT_BITMAP_TIMES_ROMAN_24;
 	glLineWidth(5.0);

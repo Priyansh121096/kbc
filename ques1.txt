@@ -1,4 +1,4 @@
-5
+6
 What is the name of the island Rafael Nadal was born in?
 Manacor
 Austin
@@ -24,6 +24,11 @@ Maria
 Serena
 Angelique
 Eugenie
+For how many consecutive years did Rafael Nadal win at least a single Grand Slam?
+Ten
+Eight
+Six
+Eleven
 
 
 
