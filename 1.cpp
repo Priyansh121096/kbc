@@ -8,6 +8,7 @@
 #include<string>
 #include<string.h>
 #include<stdlib.h>
+#include<vlc/vlc.h>
 using namespace std;
 
 volatile int stopsound = 0;
@@ -39,6 +40,7 @@ float ccol[] = {0.486, 0.988, 0.000,1};
 float wcol[] = {0.863, 0.078, 0.235,1};
 float col[][4] = {{dcol[0],dcol[1],dcol[2],dcol[3]},{dcol[0],dcol[1],dcol[2],dcol[3]},{dcol[0],dcol[1],dcol[2],dcol[3]},{dcol[0],dcol[1],dcol[2],dcol[3]}};
 bool answered = false,ffa=true,apa=true,apu=false;
+int chs;
 
 struct corrAns
 {
@@ -238,6 +240,7 @@ void drawButton2(const char *text, int length ,int x ,int y );
 void drawText(const char *text, int length ,int x ,int y );
 void createSubWindow(string msg);
 void timer(int );
+void vlc(const char *path, int sleepval);
 void idlefunc()
 {
 	idle3(&Q,option_selected);
@@ -263,6 +266,8 @@ int main(int argc, char *argv[])
     glutMouseFunc(mouseline12);
     glutTimerFunc(0,timer,0);
     //glutIdleFunc(idlefunc);
+	char path[] = "kbcshort.mp3";
+	//vlc(path,9);
     glutMainLoop();
 
     stopsound=1;
@@ -382,6 +387,8 @@ void key_func(unsigned char key,int x,int y)
 			if(obj.loaduser(name))
 			{
 				//cout<<"here"<<endl;
+				if(obj.highscore(name))
+					chs = obj.high_score;
 				load_game=0;
 				return_from_nglg = 1;
 			}
@@ -989,8 +996,12 @@ void mouseline12(int button, int state,int x1, int y1)
 				cout<<"qlevel: "<<qlevel<<endl;
 				qlevel++;
 				score = score_array[qlevel];
-				obj.high_score = score;
-				obj.update();
+				if(score>chs)
+				{
+					obj.high_score = score;
+					obj.level = qlevel;
+					obj.update();
+				}
 				load_game=0;new_game=0;game_menu=0;firsttime2 = 1;
 				return_from_nglg = 0;return_from_qa=1;
 				display();
@@ -1000,8 +1011,12 @@ void mouseline12(int button, int state,int x1, int y1)
 				//sleep(1);
 				qlevel++;
 				score = score_array[qlevel];
-				obj.high_score = score;
-				obj.update();
+				if(score>chs)
+				{
+					obj.high_score = score;
+					obj.level = qlevel;
+					obj.update();
+				}
 				createSubWindow("You Won!");
 			}
 		}
@@ -1020,6 +1035,7 @@ void mouseline12(int button, int state,int x1, int y1)
 		    game_menu=1;
 			for(int i=0;i<strlen(name);i++)
 				name[i] = '\0';
+			createSubWindow("You Forfeited!");
 		}
 
 		else if(x1>-350 && x1<-200 && y1>350 && y1<450)
@@ -1041,8 +1057,12 @@ void mouseline12(int button, int state,int x1, int y1)
 			return_from_nglg = 0;
 			return_from_qa = 1;
 			score = score_array[qlevel];
-			obj.high_score = score;
-			obj.update();
+			if(score>chs)
+			{
+				obj.high_score = score;
+				obj.level = qlevel;
+				obj.update();
+			}
 			createSubWindow("You Lost!");
 		}
 
@@ -1053,8 +1073,12 @@ void mouseline12(int button, int state,int x1, int y1)
 			return_from_nglg = 0;
 			return_from_qa = 1;
 			score = score_array[qlevel];
-			obj.high_score = score;
-			obj.update();
+			if(score>chs)
+			{
+				obj.high_score = score;
+				obj.level = qlevel;
+				obj.update();
+			}
 			createSubWindow("You Lost!");
 		}
 
@@ -1065,8 +1089,12 @@ void mouseline12(int button, int state,int x1, int y1)
 			return_from_nglg = 0;
 			return_from_qa = 1;
 			score = score_array[qlevel];
-			obj.high_score = score;
-			obj.update();
+			if(score>chs)
+			{
+				obj.high_score = score;
+				obj.level = qlevel;
+				obj.update();
+			}
 			createSubWindow("You Lost!");
 		}
 	}	
@@ -1233,3 +1261,20 @@ void drawText(const char *text, int length ,int x ,int y )
 	for(i=0;i<length;i++)
 		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24,(int)text[i]);
 }
+
+void vlc(const char *path, int sleepval)
+ {
+     libvlc_instance_t * inst;
+     libvlc_media_player_t *mp;
+     libvlc_media_t *m;
+     
+     inst = libvlc_new (0, NULL);
+     m = libvlc_media_new_path (inst, path);
+     mp = libvlc_media_player_new_from_media (m);
+     libvlc_media_release (m);
+     libvlc_media_player_play (mp);
+     sleep(sleepval);
+     libvlc_media_player_stop (mp);
+     libvlc_media_player_release (mp);
+     libvlc_release (inst);
+ }
