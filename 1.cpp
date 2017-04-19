@@ -187,14 +187,6 @@ class user
 			infile.close();
 			return false;        
 		}
-
-
-		void display()
-		{
-			std::cout<<"Name : "<<name<<endl;
-			std::cout<<"Level : "<<level<<endl;
-			std::cout<<"High Score : "<<high_score<<endl;
-		}
 };
 
 user obj;
@@ -311,19 +303,16 @@ void key_func(unsigned char key,int x,int y)
 		{
 			game_menu=0;
 			new_game=1;
-			std::cout<<"Enter new user name\n";
 		}	
 
 		else if(active_option==1 && game_menu)
 		{
-			std::cout<<"Enter existing user name\n";
 			game_menu=0;
 			load_game=1;
 		}
 		
 		else if(active_option==2 && game_menu)
 		{
-			std::cout<<"Enter existing user name\n";
 			game_menu=0;
 			high_score=1;
 		}
@@ -520,7 +509,6 @@ void display(void)
 	int i;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glColor3f(0.4,0.5,0.1);
-	cout<<"Ans: "<< answered<<endl;
 	if (game_menu)
 	{
 		show_menu();
@@ -603,9 +591,6 @@ void display(void)
 					col[i][j] = dcol[j];
 			chooseQuestion(&Q);
 			generateSetOfNumbers(k,4,4);
-			for(int i=0;i<4;i++)
-				cout<<k[i]<<" ";
-			cout<<endl;
 			firsttime2 = 0;
 			adt=(float)glutGet(GLUT_ELAPSED_TIME)/1000;
 			playSound(NULL,1);
@@ -618,7 +603,6 @@ void display(void)
 }
 void idle_about(void)
 {
-	cout<<"idle_about"<<endl;
 	char string[20] = "KBC GAME";
 	GLvoid *font_style = GLUT_BITMAP_TIMES_ROMAN_24;
 	glColor4f(1.0, 1.0, 1.0,1);
@@ -626,27 +610,27 @@ void idle_about(void)
 	for (int i = 0; string[i] != '\0'; i++)
 		glutBitmapCharacter(font_style, string[i]);
 		
-	char string1[30]="This is a simple Quiz Game ";
+	char string1[50]="This is a simple Quiz Game.";
 	glColor4f(1.0, 1.0, 1.0,1);
 	glRasterPos2f (-150, 200);
 	    for (int i = 0; string1[i] != '\0'; i++)
 	    	glutBitmapCharacter(font_style, string1[i]);
 	    	
-	char string2[30]="Play wisely and get points ";
+	char string2[60]="You have to answer all the five questions correctly to win.";
 	glColor4f(1.0, 1.0, 1.0,1);
 	glRasterPos2f (-150, 100);
 	    for (int i = 0; string2[i] != '\0'; i++)
 	    	glutBitmapCharacter(font_style, string2[i]);
 	    	
-	char string3[30]="You can use LIFE LINE also ";
+	char string3[50]="Click on one of the four options to answer.";
 	glColor4f(1.0, 1.0, 1.0,1);
 	glRasterPos2f (-150, 0);
 	    for (int i = 0; string3[i] != '\0'; i++)
 	    	glutBitmapCharacter(font_style, string3[i]);
 	    	
-	char string4[20]="GOOD LUCK ";
+	char string4[50]="Click on the button of a lifeline to use one.";
 	glColor4f(1.0, 1.0, 1.0,1);
-	glRasterPos2f (-100, -100);
+	glRasterPos2f (-150, -100);
 	    for (int i = 0; string4[i] != '\0'; i++)
 	    	glutBitmapCharacter(font_style, string4[i]);
 
@@ -659,7 +643,6 @@ void idle_about(void)
 
 void idle(void)
 {
-	cout<<"idle"<<endl;
 	static int y=0;
 	if(new_game==0 && load_game==0 && high_score==0)
 		return ;
@@ -704,7 +687,6 @@ void idle(void)
 
 void idle2(void)
 {
-	cout<<"idle2"<<endl;
 	if(return_from_hs==0)
 		return ;
 	glLineWidth(1.0);
@@ -751,7 +733,6 @@ void idle2(void)
 
 void chooseQuestion(Question *q)
 {
-	cout<<"chooseQuestion"<<endl;
 	ifstream fp;
 	fp.open(filenames[qlevel]);
 	fp>>nq;
@@ -779,7 +760,6 @@ void chooseQuestion(Question *q)
 
 void idle3(Question *Q,int opt)
 {	
-	cout<<"idle3"<<endl;
 	glBegin(GL_POLYGON);
 		glColor4f(0.294, 0.000, 0.510,1);
 		glVertex2f(minx2[4],maxy2[4]);
@@ -949,12 +929,10 @@ void generateSetOfNumbers(int arr[], int n, int k)
 
 void mouseline12(int button, int state,int x1, int y1)
 {
-	cout<<"mouseline12"<<endl;
 	if(button==GLUT_LEFT_BUTTON && state==GLUT_DOWN)
 	{
 		x1 = ((float)1000/1300)*x1 - 500;
 		y1 = 500 - ((float)1000/750)*y1;
-		cout<<x1<<" "<<y1<<endl;
 		apu = false;
 		if(x1>minx[3] && x1<maxx[3] && y1>miny[3] && y1<maxy[3])
 		{
@@ -1031,7 +1009,6 @@ void mouseline12(int button, int state,int x1, int y1)
 			while(cques==i)
 				i = rand()%nq;
 			cques = i;
-			cout<<"Current question: "<<cques<<endl;
 			load_game=0;new_game=0;game_menu=0;firsttime2 = 1;
 			answered = false;
 			return_from_nglg = 0;return_from_qa=1;
@@ -1123,7 +1100,7 @@ void timer(int )
 }
 
 void mouseline11(int button, int state,int x1, int y1)
-{	cout << x1 << " " <<y1<<endl;
+{
 	if(button==GLUT_LEFT_BUTTON && state==GLUT_DOWN)
 	{  
 		if(x1>172 && x1<227 && y1>71 && y1<99)

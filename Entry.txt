@@ -16,3 +16,6 @@ amitabh
 pranav
 0
 0
+kartik
+5
+1000000
