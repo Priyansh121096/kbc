@@ -1,17 +1,12 @@
 #include<bits/stdc++.h>
-#include <GL/glut.h>
+#include<GL/glut.h>
 #include<time.h>
-#include <IL/il.h>
-#include <unistd.h>
-#include <pthread.h>
+#include<IL/il.h>
+#include<unistd.h>
 #include<iostream>
-#include<string>
-#include<string.h>
-#include<stdlib.h>
-#include<vlc/vlc.h>
+
 using namespace std;
 
-volatile int stopsound = 0;
 volatile int game_menu;
 int new_game = 0,load_game = 0,high_score = 0,already_exists = 0, does_not_exist = 0,return_from_nglg = 0,return_from_hs = 0,return_from_qa = 0,option_selected = 1000,help=0,time_ans;
 int qlevel = 0,active_option = 0;
@@ -32,15 +27,16 @@ int maxx2[] = {-200,480,-200,480,360};
 int maxy2[] = {-200,-200,-350,-350,0};
 int correct = 1;
 int score = 0;
-int score_array[] = {0,1000,10000,100000,1000000,10000000};
+int score_array[] = {0,10000,50000,100000,500000,1000000};
 int nq;
 int adt;
 float dcol[] = {0.282, 0.239, 0.545,1};
 float ccol[] = {0.486, 0.988, 0.000,1};
 float wcol[] = {0.863, 0.078, 0.235,1};
 float col[][4] = {{dcol[0],dcol[1],dcol[2],dcol[3]},{dcol[0],dcol[1],dcol[2],dcol[3]},{dcol[0],dcol[1],dcol[2],dcol[3]},{dcol[0],dcol[1],dcol[2],dcol[3]}};
-bool answered = false,ffa=true,apa=true,apu=false;
-int chs;
+bool answered = false,ffa=true,apa=true,apu=false,sqa=true;
+int chs,pid,cques;
+string filenames[] = {"ques1.txt","ques2.txt","ques3.txt","ques4.txt","ques5.txt"};
 
 struct corrAns
 {
@@ -87,7 +83,6 @@ class user
 			string n;
 			while(!infile1.eof())
 			{
-				//cout<<"here"<<endl;
 				infile1>>n;
 				if(infile1.eof()){  break; }
 				infile1>>a;
@@ -106,22 +101,17 @@ class user
 
 		bool loaduser(string nme)
 		{	
-			//cout<<"here2"<<endl;
-			//cout<<nme;
 			ifstream infile("Entry.txt");
 			int a,b;
 			string n;
 			while(!infile.eof())
 			{
-				//cout<<"here3"<<endl;
 				infile>>n;
-				//cout<<n<<endl;
 				if(infile.eof()){  break; }
 				infile>>a;
 				infile>>b;
 				if((n==nme))
 				{
-					//std::cout<<"Found\n";
 					name = nme;
 					level=a;
 					high_score=b;
@@ -146,7 +136,6 @@ class user
 				infile>>b;
 				if((n==nme))
 				{
-					//std::cout<<"Found\n";
 					name = nme;
 					level=a;
 					high_score=b;
@@ -226,7 +215,6 @@ void idle2(void);
 void idle_about(void);
 void chooseQuestion(Question *q);
 void idle3(Question *Q, int opt);
-//void idle4(Question *Q, int opt);
 void mouseline12(int button, int state,int x1, int y1);
 void mouseline11(int button, int state,int x1, int y1);
 void generateSetOfNumbers(int arr[], int n,int k);
@@ -240,11 +228,7 @@ void drawButton2(const char *text, int length ,int x ,int y );
 void drawText(const char *text, int length ,int x ,int y );
 void createSubWindow(string msg);
 void timer(int );
-void vlc(const char *path, int sleepval);
-void idlefunc()
-{
-	idle3(&Q,option_selected);
-}
+void playSound(void *arg,int i);
 
 int main(int argc, char *argv[]) 
 {
@@ -265,17 +249,13 @@ int main(int argc, char *argv[])
     glutDisplayFunc(display);
     glutMouseFunc(mouseline12);
     glutTimerFunc(0,timer,0);
-    //glutIdleFunc(idlefunc);
-	char path[] = "kbcshort.mp3";
-	//vlc(path,9);
     glutMainLoop();
-
-    stopsound=1;
     return 0;
 }
 
 void init(void)
-{       
+{    
+	playSound(NULL,0);
 	glClear(GL_COLOR_BUFFER_BIT);
 	int tx =load_texture("kbc1.jpg", 0);
 	tx = load_texture("kbc2.jpg",1);
@@ -284,15 +264,15 @@ void init(void)
 	glEnable(GL_TEXTURE_2D);
 	glClearColor (1.0, 1.0, 1.0, 1.0);
 	glOrtho (-500,500 ,-500,500,0,100);
-	glMatrixMode(GL_PROJECTION);     // Make a simple 2D projection on the entire window
+	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	glMatrixMode(GL_MODELVIEW);    // Set the matrix mode to object modeling
+	glMatrixMode(GL_MODELVIEW);
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClearDepth(0.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the window
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 }
 
@@ -302,14 +282,13 @@ int load_texture(char * img,int i)
 	GLuint    image;
 	GLuint texid;
 	image = LoadImage(img);
-	glGenTextures(1, &tex[i]); /* Texture name generation */
-	glBindTexture(GL_TEXTURE_2D,tex[i]); /* Binding of texture name */
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); /* We will use linear interpolation for magnification filter */
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); /* We will use linear interpolation for minifying filter */
-	glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP), ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT),0, ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData()); /* Texture specification */
+	glGenTextures(1, &tex[i]);
+	glBindTexture(GL_TEXTURE_2D,tex[i]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP), ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT),0, ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData());
 	ilDeleteImages(1, &image);
 	firsttime=0;
-	//cout<<tex[i]<<"\n";
 	return tex[i];
 }
 
@@ -317,9 +296,9 @@ int LoadImage(char *filename)
 {
 	ILuint    image;
 	ILboolean success;
-	ilGenImages(1, &image);    /* Generation of one image name */
+	ilGenImages(1, &image);
 	ilBindImage(image);
-	ilLoadImage(filename); /* Binding of image name */
+	ilLoadImage(filename);
 	ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE);
 	return image;
 }
@@ -352,6 +331,10 @@ void key_func(unsigned char key,int x,int y)
 		else if(active_option==3 && game_menu)
 		{
 			std::cout<<"Bye Bye. Visit Again"<<endl;
+			string s1 = "kill " + to_string(pid);
+			string s2 = "kill " + to_string(pid+2);
+			system(s1.c_str());
+			system(s2.c_str());
 			exit(1);
 		}
         else if (active_option==4 && game_menu){
@@ -380,13 +363,11 @@ void key_func(unsigned char key,int x,int y)
 		{
 			if(strlen(name)==0)
 			{
-				//cout<<"here"<<endl;
 				return;
 			}
 
 			if(obj.loaduser(name))
 			{
-				//cout<<"here"<<endl;
 				if(obj.highscore(name))
 					chs = obj.high_score;
 				load_game=0;
@@ -542,13 +523,11 @@ void display(void)
 	cout<<"Ans: "<< answered<<endl;
 	if (game_menu)
 	{
-		//cout<<"Yaha hoon7"<<endl;
 		show_menu();
 	}
 
 	else if(new_game)
 	{
-		//cout<<"Yaha hoon3"<<endl;
 		show_background(2);
 		idle();
 		if(already_exists)
@@ -561,13 +540,11 @@ void display(void)
 	}
 	else if(help)
 	{
-		//cout<<"Yaha hoon3"<<endl;
 		show_background(1);
 		idle_about();
 	}
 	else if(load_game)
-	{
-		//cout<<"Yaha hoon4"<<endl;   
+	{   
 		show_background(2);
 		idle();
 		if(does_not_exist)
@@ -580,18 +557,15 @@ void display(void)
 	}
 	
 	else if(high_score)
-	{
-		//cout<<"Yaha hoon5"<<endl;   
+	{ 
 		show_background(2);
 		idle();
 		if(does_not_exist)
 			does(0);
-		return_from_hs=0;
 	}
 
 	else if(return_from_hs)
 	{
-		//cout<<"Yaha hoon6"<<endl;
 		show_background(1);
 		idle2();
 	}
@@ -599,40 +573,45 @@ void display(void)
 	else if(answered)
 	{
 		show_background(1);
-		//cout<<"Yaha hoon"<<endl;
-		if(option_selected==3)
+		for(int j=0;j<4;j++)
 		{
-			for(int i=0;i<4;i++)
-				col[k[3]][i] = ccol[i];
-		}
-		else
-		{
-			for(int i=0;i<4;i++)
-				col[k[3]][i] = ccol[i];
-			for(int i=0;i<4;i++)
-				col[k[option_selected]][i] = wcol[i];
+			if(k[j]==3)
+			{
+				for(int i=0;i<4;i++)
+					col[j][i] = ccol[i];
+			}
+			else if(option_selected!=3 && k[j]==option_selected)
+			{
+				for(int i=0;i<4;i++)
+					col[j][i] = wcol[i];
+			}
 		}
 		idle3(&Q,option_selected);
-		sleep(1);
 		answered = false;
-		//return_from_qa = 0;
 	}
 
-	else //if(return_from_qa)
+	else if(!answered)
 	{
 		if(firsttime2)
 		{
+			string s1 = "kill " + to_string(pid);
+			string s2 = "kill " + to_string(pid+2);
+			system(s1.c_str());
+			system(s2.c_str());
 			for(int i=0;i<3;i++)
 				for(int j=0;j<4;j++)
 					col[i][j] = dcol[j];
 			chooseQuestion(&Q);
 			generateSetOfNumbers(k,4,4);
+			for(int i=0;i<4;i++)
+				cout<<k[i]<<" ";
+			cout<<endl;
 			firsttime2 = 0;
 			adt=(float)glutGet(GLUT_ELAPSED_TIME)/1000;
+			playSound(NULL,1);
 		}
 		show_background(1);
 		idle3(&Q, option_selected);
-		//cout<<"Yaha hoon2"<<endl;
 	}
 	glFlush();
 	glutSwapBuffers();
@@ -770,25 +749,15 @@ void idle2(void)
 	glFlush();
 }
 
-int firsttime3 = 1;
 void chooseQuestion(Question *q)
 {
 	cout<<"chooseQuestion"<<endl;
 	ifstream fp;
-	fp.open("ques1.txt");
-	if(firsttime3)
-	{
-		firsttime3 = 0;
-		fp >> nq;
-		cout<<nq<<endl;
-		generateSetOfNumbers(order_of_ques,5,nq);
-		for(int i=0;i<5;i++)
-			cout<<order_of_ques[i]<<" ";
-		cout<<endl;
-	}
-	int i = order_of_ques[qlevel];
+	fp.open(filenames[qlevel]);
+	fp>>nq;
+	cques = rand()%nq;
 	string buf;
-	for(int j=0;j<i;j++)
+	for(int j=0;j<cques;j++)
 	{
 		getline(fp,buf);
 		getline(fp,buf);
@@ -806,7 +775,6 @@ void chooseQuestion(Question *q)
 	audiencePoll(q);
 	for(int i=0;i<3;i++)
 		q->wAns[i].flag = true;
-	//fiftyFifty(q);
 }
 
 void idle3(Question *Q,int opt)
@@ -846,6 +814,13 @@ void idle3(Question *Q,int opt)
 		glutMouseFunc(mouseline12);
 	}
 
+	if(sqa)
+	{
+		string text = "Swap Question";  
+		drawButton2(text.data(),text.size(),-350,90);
+		glutMouseFunc(mouseline12);
+	}
+
 	if(apu)
 	{	
 		string opt[4] = {"A","B","C","D"};
@@ -855,32 +830,32 @@ void idle3(Question *Q,int opt)
 			{
 				string st = opt[i];
 				GLvoid *font_style = GLUT_BITMAP_TIMES_ROMAN_24;
-				glColor4f(1.0, 1.0, 1.0,1);
-				glRasterPos2f (-350+i*20,20);
+				glColor4f(0.486, 0.988, 0.000,1);
+				glRasterPos2f (-60+i*30,20);
 				for (int i = 0; st[i] != '\0'; i++)
 					glutBitmapCharacter(font_style, st[i]);
 				glBegin(GL_POLYGON);
-					glColor4f(dcol[0], dcol[1], dcol[2],dcol[3]);
-					glVertex2f(-350+i*20,60+Q->wAns[k[i]].prob);
-					glVertex2f(-340+i*20,60+Q->wAns[k[i]].prob);
-					glVertex2f(-340+i*20,60);
-					glVertex2f(-350+i*20,60);
+					glColor4f(1.000, 0.843, 0.000,1);
+					glVertex2f(-60+i*30,60+2*Q->wAns[k[i]].prob);
+					glVertex2f(-40+i*30,60+2*Q->wAns[k[i]].prob);
+					glVertex2f(-40+i*30,60);
+					glVertex2f(-60+i*30,60);
 				glEnd();
 			}
 			else if(k[i]==3)
 			{
 				string st = opt[i];
 				GLvoid *font_style = GLUT_BITMAP_TIMES_ROMAN_24;
-				glColor4f(1.0, 1.0, 1.0,1);
-				glRasterPos2f (-350+i*20,20);
+				glColor4f(0.486, 0.988, 0.000,1);
+				glRasterPos2f (-60+i*30,20);
 				for (int i = 0; st[i] != '\0'; i++)
 					glutBitmapCharacter(font_style, st[i]);
 				glBegin(GL_POLYGON);
-					glColor4f(dcol[0], dcol[1], dcol[2],dcol[3]);
-					glVertex2f(-350+i*20,60+Q->cAns.prob);
-					glVertex2f(-340+i*20,60+Q->cAns.prob);
-					glVertex2f(-340+i*20,60);
-					glVertex2f(-350+i*20,60);
+					glColor4f(1.000, 0.843, 0.000,1);
+					glVertex2f(-60+i*30,60+2*Q->cAns.prob);
+					glVertex2f(-40+i*30,60+2*Q->cAns.prob);
+					glVertex2f(-40+i*30,60);
+					glVertex2f(-60+i*30,60);
 				glEnd();
 			}
 		}
@@ -899,10 +874,6 @@ void idle3(Question *Q,int opt)
 		glutBitmapCharacter(font_style, ques[i]);
 
 	char ans[40];	
-	/*if(firsttime2 && !answered)
-	{
-		generateSetOfNumbers(k,4,4);	
-	}*/
 	for(int i=0;i<4;i++)
 	{
 		if(k[i]==3)
@@ -958,7 +929,6 @@ void idle3(Question *Q,int opt)
 		glutMouseFunc(mouseline11);
 		glutSwapBuffers();
 	}
-	//answered = false;
 }
 
 void generateSetOfNumbers(int arr[], int n, int k)
@@ -993,7 +963,6 @@ void mouseline12(int button, int state,int x1, int y1)
 			time_ans = 30;
 			if(qlevel<4)
 			{
-				cout<<"qlevel: "<<qlevel<<endl;
 				qlevel++;
 				score = score_array[qlevel];
 				if(score>chs)
@@ -1008,7 +977,6 @@ void mouseline12(int button, int state,int x1, int y1)
 			}
 			else
 			{
-				//sleep(1);
 				qlevel++;
 				score = score_array[qlevel];
 				if(score>chs)
@@ -1021,34 +989,54 @@ void mouseline12(int button, int state,int x1, int y1)
 			}
 		}
 
-		else if(x1>-68 && x1<-30 && y1>-192 && y1<-157)
+		else if(x1>-65 && x1<-45 && y1>-180 && y1<-165 && return_from_hs)
+		{
+			game_menu = 1;
+			return_from_hs = 0;
+			for(int i=0;i<strlen(name);i++)
+				name[i] = '\0';
+		}
+
+		else if(x1>-68 && x1<-30 && y1>-192 && y1<-157 && help)
 		{
 		    game_menu=1;
 			help = 0;
-			high_score = 0;
 			for(int i=0;i<strlen(name);i++)
 				name[i] = '\0';
 		}
 	
 		else if(x1>-28 && x1<75 && y1>-400 && y1<-300)
 		{
-		    game_menu=1;
 			for(int i=0;i<strlen(name);i++)
 				name[i] = '\0';
 			createSubWindow("You Forfeited!");
 		}
 
-		else if(x1>-350 && x1<-200 && y1>350 && y1<450)
+		else if(x1>-350 && x1<-200 && y1>350 && y1<450 && ffa)
 		{
 			ffa = false;
 			fiftyFifty(&Q);		
 		}
 
-		else if(x1>-350 && x1<-200 && y1>220 && y1<320)
+		else if(x1>-350 && x1<-200 && y1>220 && y1<320 && apa)
 		{
 			apa = false;
 			apu = true;
-		}		
+		}
+
+		else if(x1>-350 && x1<-200 && y1>90 && y1<190 && sqa)
+		{
+			sqa = false;
+			int i = rand()%nq;
+			while(cques==i)
+				i = rand()%nq;
+			cques = i;
+			cout<<"Current question: "<<cques<<endl;
+			load_game=0;new_game=0;game_menu=0;firsttime2 = 1;
+			answered = false;
+			return_from_nglg = 0;return_from_qa=1;
+			display();			
+		}
 		
 		else if(x1>minx[0] && x1<maxx[0] && y1>miny[0] && y1<maxy[0])
 		{	
@@ -1097,7 +1085,8 @@ void mouseline12(int button, int state,int x1, int y1)
 			}
 			createSubWindow("You Lost!");
 		}
-	}	
+	}
+	sleep(1);	
 	glutPostRedisplay();
 }
 
@@ -1118,7 +1107,7 @@ void createSubWindow(string msg)
 	drawText(text.data(),text.size(),85,50);
 	string s1;
 	stringstream co1;
-	co1 << obj.high_score;
+	co1 << score;
 	s1=co1.str();
 	drawText(s1.data(),s1.size(),150,50);
 	text = "Exit";
@@ -1142,7 +1131,20 @@ void mouseline11(int button, int state,int x1, int y1)
 			int w1=glutGetWindow();
 			glutSetWindow(menuw);
 			glutDestroyWindow(w1);	
-			glutDestroyWindow(menuw);
+
+			qlevel=0;
+			load_game=0;new_game=0;game_menu=1;firsttime2 = 1;
+			return_from_nglg = 0;return_from_qa=0;
+			for(int i=0;i<strlen(name);i++)
+				name[i] = '\0';
+			answered = false;
+			ffa = true;
+			apa = true;
+			sqa = true;
+			string s1 = "kill " + to_string(pid);
+			string s2 = "kill " + to_string(pid+2);
+			system(s1.c_str());
+			system(s2.c_str());
 		}
 	}
 	glFlush();
@@ -1200,6 +1202,7 @@ void does(int x)
 		glutBitmapCharacter(font_style, string1[i]);
 	glutPostRedisplay();
 }
+
 void drawButton2(const char *text, int length ,int x ,int y )
 {	GLvoid *font_style = GLUT_BITMAP_TIMES_ROMAN_24;
 	glLineWidth(5.0);
@@ -1262,19 +1265,13 @@ void drawText(const char *text, int length ,int x ,int y )
 		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24,(int)text[i]);
 }
 
-void vlc(const char *path, int sleepval)
- {
-     libvlc_instance_t * inst;
-     libvlc_media_player_t *mp;
-     libvlc_media_t *m;
-     
-     inst = libvlc_new (0, NULL);
-     m = libvlc_media_new_path (inst, path);
-     mp = libvlc_media_player_new_from_media (m);
-     libvlc_media_release (m);
-     libvlc_media_player_play (mp);
-     sleep(sleepval);
-     libvlc_media_player_stop (mp);
-     libvlc_media_player_release (mp);
-     libvlc_release (inst);
- }
+string sounds[2] = {"kbcshort.mp3","kbctimer.mp3"};
+void  playSound(void *arg,int i)
+{
+	string comm = "cvlc \"";
+	comm += sounds[i] + "\"";
+	printf("%d",getpid());
+	pid = fork();
+	if(pid==0)
+    	system(comm.c_str());
+}
