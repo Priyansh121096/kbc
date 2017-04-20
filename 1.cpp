@@ -4,39 +4,39 @@
 #include<IL/il.h>
 #include<unistd.h>
 #include<iostream>
-
+#define NO_OF_QUES 5
 using namespace std;
 
 volatile int game_menu;
-int new_game = 0,load_game = 0,high_score = 0,already_exists = 0, does_not_exist = 0,return_from_nglg = 0,return_from_hs = 0,return_from_qa = 0,option_selected = 1000,help=0,time_ans;
+int new_game = 0,load_game = 0,high_score = 0,already_exists = 0, does_not_exist = 0;
+int return_from_nglg = 0,return_from_hs = 0,return_from_qa = 0,option_selected = 1000,help=0,time_ans;
 int qlevel = 0,active_option = 0;
 int menuw;
-GLuint tex[5];
-char name[32];
-double px[]={-480,-480,-480,-480,-480}, py[]={200,100,0,-100,-200},transp[]={1,0.2,0.2,0.2,0.2};
-int minx[5]={0},maxx[5]={0},miny[5]={0},maxy[5]={0};
 int firsttime2 = 1;
 int fq=0,fq2=0;
-int order_of_ques[5] = {0};
-int k[4]={0};
+int correct = 1;
+int score = 0;
+int nq;
+int adt;
+bool answered = false,ffa=true,apa=true,apu=false,sqa=true;
+int chs,pid,cques;
+GLuint tex[5];
+char name[32];
 int c2x[] = {-400,250,-400,250,-270};
 int c2y[] = {-230,-230,-380,-380,-70};
 int minx2[] = {-480,200,-480,200,-360};
 int miny2[] = {-300,-300,-450,-450,-150};
 int maxx2[] = {-200,480,-200,480,360};
 int maxy2[] = {-200,-200,-350,-350,0};
-int correct = 1;
-int score = 0;
-int score_array[] = {0,10000,50000,100000,500000,1000000};
-int nq;
-int adt;
 float dcol[] = {0.282, 0.239, 0.545,1};
 float ccol[] = {0.486, 0.988, 0.000,1};
 float wcol[] = {0.863, 0.078, 0.235,1};
 float col[][4] = {{dcol[0],dcol[1],dcol[2],dcol[3]},{dcol[0],dcol[1],dcol[2],dcol[3]},{dcol[0],dcol[1],dcol[2],dcol[3]},{dcol[0],dcol[1],dcol[2],dcol[3]}};
-bool answered = false,ffa=true,apa=true,apu=false,sqa=true;
-int chs,pid,cques;
-string filenames[] = {"ques1.txt","ques2.txt","ques3.txt","ques4.txt","ques5.txt"};
+string filenames[] = {"data/ques1.txt","data/ques2.txt","data/ques3.txt","data/ques4.txt","data/ques5.txt"};
+int score_array[] = {0,10000,50000,100000,500000,1000000};
+double px[]={-480,-480,-480,-480,-480}, py[]={200,100,0,-100,-200},transp[]={1,0.2,0.2,0.2,0.2};
+int minx[5]={0},maxx[5]={0},miny[5]={0},maxy[5]={0};
+int k[4]={0};
 
 struct corrAns
 {
@@ -78,7 +78,7 @@ class user
 			
 			name = nme;
 			ifstream infile1;
-			infile1.open("Entry.txt");
+			infile1.open("data/Entry.txt");
 			int a,b;
 			string n;
 			while(!infile1.eof())
@@ -91,7 +91,7 @@ class user
 			}
 			infile1.close();
 
-			ofstream infile("Entry.txt",ios::app);  
+			ofstream infile("data/Entry.txt",ios::app);  
 			infile<<name<<endl;
 			infile<<level<<endl;
 			infile<<high_score<<endl;
@@ -101,7 +101,7 @@ class user
 
 		bool loaduser(string nme)
 		{	
-			ifstream infile("Entry.txt");
+			ifstream infile("data/Entry.txt");
 			int a,b;
 			string n;
 			while(!infile.eof())
@@ -125,7 +125,7 @@ class user
 		
 		bool highscore(string nme)
 		{
-			ifstream infile("Entry.txt");
+			ifstream infile("data/Entry.txt");
 			int a,b;
 			string n;
 			while(!infile.eof())
@@ -150,7 +150,7 @@ class user
 		bool update()
 		{
 			fstream infile;
-			infile.open("Entry.txt");
+			infile.open("data/Entry.txt");
 			int a,b;
 			string n;
 
@@ -249,9 +249,9 @@ void init(void)
 {    
 	playSound(NULL,0);
 	glClear(GL_COLOR_BUFFER_BIT);
-	int tx =load_texture("kbc1.jpg", 0);
-	tx = load_texture("kbc2.jpg",1);
-	tx = load_texture("kbc3.jpg",2);
+	int tx =load_texture("images/kbc1.jpg", 0);
+	tx = load_texture("images/kbc2.jpg",1);
+	tx = load_texture("images/kbc3.jpg",2);
 
 	glEnable(GL_TEXTURE_2D);
 	glClearColor (1.0, 1.0, 1.0, 1.0);
@@ -435,10 +435,10 @@ void show_menu()
 	show_background(0);
 	draw_option(0);
 	glColor3f(0.8,0.2,0.2);
-	draw_font("New Game",px[0]+125,py[0]-45);
+	draw_font("New User",px[0]+125,py[0]-45);
 	draw_option(1);
 	glColor3f(0.8,0.2,0.2);
-	draw_font("Load Game",px[1]+122,py[1]-45);
+	draw_font("Load User",px[1]+122,py[1]-45);
 	draw_option(2);
 	glColor3f(0.8,0.2,0.2);
 	draw_font("High Score",px[2]+120,py[2]-45);
@@ -939,7 +939,7 @@ void mouseline12(int button, int state,int x1, int y1)
 			answered = true;
 			option_selected = 3;
 			time_ans = 30;
-			if(qlevel<4)
+			if(qlevel<(NO_OF_QUES-1))
 			{
 				qlevel++;
 				score = score_array[qlevel];
@@ -963,8 +963,10 @@ void mouseline12(int button, int state,int x1, int y1)
 					obj.level = qlevel;
 					obj.update();
 				}
+				time_ans = 0;
 				createSubWindow("You Won!");
 			}
+			sleep(1);
 		}
 
 		else if(x1>-65 && x1<-45 && y1>-180 && y1<-165 && return_from_hs)
@@ -1029,6 +1031,7 @@ void mouseline12(int button, int state,int x1, int y1)
 				obj.update();
 			}
 			createSubWindow("You Lost!");
+			sleep(1);
 		}
 
 		else if(x1>minx[1] && x1<maxx[1] && y1>miny[1] && y1<maxy[1])
@@ -1045,6 +1048,7 @@ void mouseline12(int button, int state,int x1, int y1)
 				obj.update();
 			}
 			createSubWindow("You Lost!");
+			sleep(1);
 		}
 
 		else if(x1>minx[2] && x1<maxx[2] && y1>miny[2] && y1<maxy[2])
@@ -1061,9 +1065,9 @@ void mouseline12(int button, int state,int x1, int y1)
 				obj.update();
 			}
 			createSubWindow("You Lost!");
+			sleep(1);
 		}
-	}
-	sleep(1);	
+	}	
 	glutPostRedisplay();
 }
 
@@ -1242,12 +1246,11 @@ void drawText(const char *text, int length ,int x ,int y )
 		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24,(int)text[i]);
 }
 
-string sounds[2] = {"kbcshort.mp3","kbctimer.mp3"};
+string sounds[2] = {"audio/kbcshort.mp3","audio/kbctimer.mp3"};
 void  playSound(void *arg,int i)
 {
 	string comm = "cvlc \"";
 	comm += sounds[i] + "\"";
-	printf("%d",getpid());
 	pid = fork();
 	if(pid==0)
     	system(comm.c_str());
