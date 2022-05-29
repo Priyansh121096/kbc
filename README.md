@@ -1,6 +1,6 @@
-# Kaun Banega Crorepati Game
+# Kaun Banega Crorepati
 ## Overview
-This the code for the famous "Kaun Banega Crorepati (Who wants to be a Millionaire)" game. It's a simple quiz game with the player (user) having to answer multiple choice questions to move forward. The player has three lifelines at the start viz. audience poll, fifty-fifty and swap the question at his disposal.
+This repo hosts the code for the famous "Kaun Banega Crorepati (Who wants to be a Millionaire)" quiz game. It's a simple quiz game with the player (user) having to a certain number of multiple choice questions consecutively to move win. At the start, the player has three lifelines at their disposal viz. audience poll, fifty-fifty and swap the question.
 
 ## Tech stack
 We have developed the game using C++ in our back-end implementation and GLUT and IL libraries for our front-end implementation and openGL for rendering.
